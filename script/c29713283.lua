@@ -6,10 +6,10 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e0:SetCode(EFFECT_ADD_SETCODE)
-	e0:SetValue(0xdd) --"Blue-Eyes" archetype ID
+	e0:SetValue(0xdd) -- "Blue-Eyes" archetype ID
 	c:RegisterEffect(e0)
 	
-	-- Special Summon this card by sending 1 "Blue-Eyes" monster from hand or Deck to the GY
+	-- Special Summon this card by sending 1 "Blue-Eyes" monster to GY
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
@@ -18,8 +18,8 @@ function s.initial_effect(c)
 	e1:SetCondition(s.spcon)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-
-	-- Name becomes "Blue-Eyes White Dragon" on field or GY
+	
+	-- Name becomes "Blue-Eyes White Dragon" on field or in GY
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_CHANGE_CODE)
@@ -27,7 +27,7 @@ function s.initial_effect(c)
 	e2:SetValue(CARD_BLUEEYES_W_DRAGON)
 	e2:SetRange(LOCATION_MZONE+LOCATION_GRAVE)
 	c:RegisterEffect(e2)
-
+	
 	-- Add 2 "Blue-Eyes" monsters to hand, then discard 1 card
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -42,8 +42,8 @@ function s.initial_effect(c)
 	local e4=e3:Clone()
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
-
-	-- Special Summon 1 monster that mentions "Blue-Eyes White Dragon" and boost ATK
+	
+	-- Special Summon 1 "Blue-Eyes" monster from GY and boost ATK
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,1))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_ATKCHANGE)
@@ -53,7 +53,7 @@ function s.initial_effect(c)
 	e5:SetTarget(s.sptg)
 	e5:SetOperation(s.spop2)
 	c:RegisterEffect(e5)
-
+	
 	-- Special Summon this card if sent to the GY
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,2))
@@ -65,8 +65,8 @@ function s.initial_effect(c)
 	e6:SetTarget(s.sptg2)
 	e6:SetOperation(s.spop3)
 	c:RegisterEffect(e6)
-
-	-- Fusion Summon a Fusion monster (Quick Effect)
+	
+	-- Quick Effect: Fusion Summon a Fusion Monster using "Blue-Eyes"
 	local e7=Effect.CreateEffect(c)
 	e7:SetDescription(aux.Stringid(id,3))
 	e7:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -79,7 +79,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e7)
 end
 
--- Special Summon by sending 1 "Blue-Eyes" monster to GY
+-- Special Summon by sending 1 "Blue-Eyes" monster to the GY
 function s.spfilter(c)
 	return c:IsSetCard(0xdd) and c:IsAbleToGrave()
 end
@@ -112,7 +112,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Special Summon 1 "Blue-Eyes" monster and boost ATK
+-- Special Summon 1 "Blue-Eyes" monster from GY and boost ATK
 function s.spfilter2(c,e,tp)
 	return c:IsSetCard(0xdd) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
