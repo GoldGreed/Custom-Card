@@ -129,7 +129,7 @@ end
 
 -- Special Summon from GY condition
 function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsSetCard,0xdd),tp,LOCATION_MZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0xdd),tp,LOCATION_MZONE,0,1,nil)
 end
 
 function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -185,7 +185,7 @@ end
 
 -- Destroy 1 card if another Dragon is on field or in GY
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsRace,RACE_DRAGON),tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsRace,RACE_DRAGON),tp,LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,1,nil)
 end
 
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
