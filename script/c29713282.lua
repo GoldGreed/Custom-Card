@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_CHANGE_CODE)
 	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e2:SetValue(CARD_BLUEEYES_CMAX_DRAGON)
+	e2:SetValue(55410871)
 	e2:SetRange(LOCATION_MZONE+LOCATION_GRAVE)
 	c:RegisterEffect(e2)
 
