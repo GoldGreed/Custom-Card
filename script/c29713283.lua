@@ -67,15 +67,18 @@ function s.initial_effect(c)
 	c:RegisterEffect(e6)
 	
 	-- Quick Effect: Fusion Summon a Fusion Monster using "Blue-Eyes"
+	--Fusion Summon 1 Level 8 or higher Fusion Monster
+	local params={function(c) return c:IsLevelAbove(8) end}
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,3))
-	e7:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e7:SetDescription(aux.Stringid(id,1))
+	e7:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
 	e7:SetType(EFFECT_TYPE_QUICK_O)
 	e7:SetCode(EVENT_FREE_CHAIN)
 	e7:SetRange(LOCATION_MZONE)
+	e7:SetHintTiming(0,TIMING_MAIN_END)
 	e7:SetCountLimit(1,{id,3})
-	e7:SetTarget(s.fusiontg)
-	e7:SetOperation(s.fusionop)
+	e7:SetTarget(Fusion.SummonEffTG(table.unpack(params)))
+	e7:SetOperation(Fusion.SummonEffOP(table.unpack(params)))
 	c:RegisterEffect(e7)
 end
 
