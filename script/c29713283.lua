@@ -158,24 +158,20 @@ end
 
 -- Fusion Summon using materials from hand, field, or GY
 function s.fusionfilter(c,e,tp)
-	return c:IsSetCard(0xdd) and c:IsType(TYPE_FUSION) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
+	return c:IsSetCard(0xdd) and c:IsType(TYPE_FUSION)
 end
 function s.fusiontg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.fusionfilter,tp,LOCATION_EXTRA,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 function s.fusionop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=Duel.SelectMatchingCard(tp,s.fusionfilter,tp,LOCATION_EXTRA,0,1,1,nil):GetFirst()
 	if tc then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
-		local mat=Duel.SelectMatchingCard(tp,aux.FusionMaterialFilter(tc),tp,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_GRAVE,0,1,99,nil)
+		local mat=Duel.SelectMatchingCard(tp,nil,tp,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_GRAVE,0,tc.material_count(),tc.material_count(),nil)
 		if #mat>0 then
-			Duel.HintSelection(mat)
-			Duel.SendtoDeck(mat,nil,SEQ_DECKSHUFFLE,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
-			Duel.BreakEffect()
-			Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-			tc:CompleteProcedure()
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+			Duel.FusionSummon(tp,tc,mat)
 		end
 	end
 end
