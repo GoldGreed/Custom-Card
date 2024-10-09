@@ -161,7 +161,7 @@ end
 
 -- Add "Call of the Blue-Eyed Dragon" when sent to GY
 function s.thfilter2(c)
-	return c:IsCode(CALL_BLUEEYED_DRAGON) and c:IsAbleToHand()
+	return c:IsCode(64000002) and c:IsAbleToHand()
 end
 
 function s.thtg2(e,tp,eg,ep,ev,re,r,rp,chk)
