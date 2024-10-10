@@ -1,11 +1,11 @@
---Blue-Eyes Galactic Fusion Dragon
+-- Blue-Eyes Galactic Fusion Dragon
 local s,id=GetID()
 function s.initial_effect(c)
-	--Fusion Summon
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(Card.IsRace,RACE_DRAGON),2,true,function(g) return #g:GetClassCount(Card.GetCode)==#g end)
+	-- Fusion Summon procedure
+	Fusion.AddProcMix(c,true,true,s.matfilter,aux.FilterBoolFunction(Card.IsRace,RACE_DRAGON))
 	
-	--Destroy 1 card on Fusion Summon
+	-- Destroy 1 card on field upon Fusion Summon
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -15,80 +15,84 @@ function s.initial_effect(c)
 	e1:SetOperation(s.desop)
 	c:RegisterEffect(e1)
 
-	--Unaffected by other card effects
+	-- Unaffected by other card effects
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_IMMUNE_EFFECT)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e2:SetRange(LOCATION_MZONE)
+	e2:SetCode(EFFECT_IMMUNE_EFFECT)
 	e2:SetValue(s.efilter)
 	c:RegisterEffect(e2)
 
-	--Destroy and inflict damage
+	-- Destroy opponent's monster and inflict damage
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_DESTROY+CATEGORY_DAMAGE)
 	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1)
-	e3:SetTarget(s.damtg)
-	e3:SetOperation(s.damop)
+	e3:SetCountLimit(1,{id,1})
+	e3:SetTarget(s.destg2)
+	e3:SetOperation(s.desop2)
 	c:RegisterEffect(e3)
 
-	--Special Summon Dragon from GY
+	-- Special Summon Dragon monster from GY
 	local e4=Effect.CreateEffect(c)
 	e4:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e4:SetType(EFFECT_TYPE_IGNITION)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1)
+	e4:SetCountLimit(1,{id,2})
 	e4:SetTarget(s.sptg)
 	e4:SetOperation(s.spop)
 	c:RegisterEffect(e4)
 
-	--Special Summon Level 1 Tuners after battle damage
+	-- Special Summon 2 Level 1 Tuners from Deck/GY when inflicting battle damage
 	local e5=Effect.CreateEffect(c)
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e5:SetCode(EVENT_BATTLE_DAMAGE)
-	e5:SetCondition(s.bdcon)
-	e5:SetTarget(s.bdtg)
-	e5:SetOperation(s.bdop)
+	e5:SetCondition(s.sptunercon)
+	e5:SetTarget(s.sptunertg)
+	e5:SetOperation(s.sptunerop)
 	c:RegisterEffect(e5)
 
-	--Add Blue-Eyes monsters to hand
+	-- Add 2 "Blue-Eyes White Dragon" to hand when sent to GY
 	local e6=Effect.CreateEffect(c)
 	e6:SetCategory(CATEGORY_TOHAND)
 	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e6:SetCode(EVENT_TO_GRAVE)
-	e6:SetProperty(EFFECT_FLAG_DELAY)
-	e6:SetTarget(s.addtg)
-	e6:SetOperation(s.addop)
+	e6:SetCountLimit(1,{id,3})
+	e6:SetTarget(s.thtg)
+	e6:SetOperation(s.thop)
 	c:RegisterEffect(e6)
 
-	--Revive self from GY
+	-- Special Summon this card from GY (except turn sent)
 	local e7=Effect.CreateEffect(c)
 	e7:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e7:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e7:SetCode(EVENT_REMOVE)
-	e7:SetProperty(EFFECT_FLAG_DELAY)
-	e7:SetCondition(s.revcon)
-	e7:SetTarget(s.revtg)
-	e7:SetOperation(s.revop)
+	e7:SetType(EFFECT_TYPE_IGNITION)
+	e7:SetRange(LOCATION_GRAVE)
+	e7:SetCountLimit(1,{id,4})
+	e7:SetCondition(s.spselfcon)
+	e7:SetTarget(s.spselftg)
+	e7:SetOperation(s.spselfop)
 	c:RegisterEffect(e7)
 
-	--Banish from GY to summon 2 Blue-Eyes from GY
+	-- Banish from GY and Special Summon 2 "Blue-Eyes" monsters
 	local e8=Effect.CreateEffect(c)
 	e8:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e8:SetType(EFFECT_TYPE_QUICK_O)
-	e8:SetCode(EVENT_FREE_CHAIN)
+	e8:SetType(EFFECT_TYPE_IGNITION)
 	e8:SetRange(LOCATION_GRAVE)
-	e8:SetCondition(s.spcon)
+	e8:SetCountLimit(1,{id,5})
 	e8:SetCost(aux.bfgcost)
-	e8:SetTarget(s.spgytg)
-	e8:SetOperation(s.spgyop)
+	e8:SetTarget(s.spblueeyestg)
+	e8:SetOperation(s.spblueeyesop)
 	c:RegisterEffect(e8)
 end
 
---Fusion Summon Destroy Effect
+-- Fusion material filter for "Blue-Eyes" monster
+function s.matfilter(c,fc,sumtype,tp)
+	return c:IsSetCard(0xdd)
+end
+
+-- Destroy 1 card on field upon Fusion Summon
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_FUSION)
 end
@@ -105,104 +109,110 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Unaffected by other card effects
+-- Unaffected by other cards' effects
 function s.efilter(e,te)
 	return te:GetOwner()~=e:GetOwner()
 end
 
---Destroy 1 Opponent Card and Inflict Damage
-function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) end
+-- Destroy 1 opponent's monster and inflict damage
+function s.destg2(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,0)
 end
 
-function s.damop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,1,1,nil)
-	if #g>0 then
-		local atk=g:GetFirst():GetBaseAttack()
-		if Duel.Destroy(g,REASON_EFFECT)~=0 and atk>0 then
-			Duel.Damage(1-tp,atk,REASON_EFFECT)
-		end
+function s.desop2(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_MZONE,1,1,nil)
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
+		Duel.Damage(1-tp,g:GetFirst():GetBaseAttack(),REASON_EFFECT)
 	end
 end
 
---Special Summon Dragon from GY
+-- Special Summon 1 Dragon monster from GY
+function s.spfilter(c,e,tp)
+	return c:IsRace(RACE_DRAGON) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(aux.FilterBoolFunction(Card.IsRace,RACE_DRAGON),tp,LOCATION_GRAVE,0,1,nil)
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,aux.FilterBoolFunction(Card.IsRace,RACE_DRAGON),tp,LOCATION_GRAVE,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
---Battle Damage Effect
-function s.bdcon(e,tp,eg,ep,ev,re,r,rp)
+-- Special Summon 2 Level 1 Tuners from Deck/GY when inflicting battle damage
+function s.sptunercon(e,tp,eg,ep,ev,re,r,rp)
 	return ep~=tp
 end
 
-function s.bdtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsLevel,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,nil,1)
-	end
+function s.sptunerfilter(c,e,tp)
+	return c:IsLevel(1) and c:IsType(TYPE_TUNER) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+function s.sptunertg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
+		and Duel.IsExistingMatchingCard(s.sptunerfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,nil,e,tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK+LOCATION_GRAVE)
 end
 
-function s.bdop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,Card.IsLevel,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,2,nil,1)
+function s.sptunerop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+	local g=Duel.SelectMatchingCard(tp,s.sptunerfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,2,nil,e,tp)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
---Add Blue-Eyes monsters to hand
-function s.addtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(aux.FilterBoolFunction(Card.IsSetCard,0xdd),tp,LOCATION_DECK+LOCATION_GRAVE,0,2,nil)
-	end
+-- Add up to 2 "Blue-Eyes White Dragon" to hand when sent to GY
+function s.thfilter(c)
+	return c:IsCode(CARD_BLUEEYES_W_DRAGON) and c:IsAbleToHand()
+end
+
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK+LOCATION_GRAVE)
 end
 
-function s.addop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,aux.FilterBoolFunction(Card.IsSetCard,0xdd),tp,LOCATION_DECK+LOCATION_GRAVE,0,2,2,nil)
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,2,nil)
 	if #g>0 then
-		Duel.SendtoHand(g,tp,REASON_EFFECT)
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
 end
 
---Revive from GY (except turn sent there)
-function s.revcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnCount()~=e:GetHandler():GetTurnID()
+-- Special Summon itself from GY (except the turn it was sent there)
+function s.spselfcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetTurnCount()>e:GetHandler():GetTurnID()
 end
 
-function s.revtg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.spselftg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 
-function s.revop(e,tp,eg,ep,ev,re,r,rp)
-	if e:GetHandler():IsRelateToEffect(e) then
-		Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
+function s.spselfop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if c:IsRelateToEffect(e) then
+		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
---Banish from GY to summon 2 Blue-Eyes from GY
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FilterBoolFunction(Card.IsSetCard,0xdd),tp,LOCATION_GRAVE,0,2,nil)
-end
-
-function s.spgytg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1 end
+-- Banish from GY and Special Summon 2 "Blue-Eyes" monsters with different names
+function s.spblueeyestg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
+		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE,0,2,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_GRAVE)
 end
 
-function s.spgyop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,aux.FilterBoolFunction(Card.IsSetCard,0xdd),tp,LOCATION_GRAVE,0,2,2,nil)
+function s.spblueeyesop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_GRAVE,0,2,2,nil)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
