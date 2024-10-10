@@ -26,6 +26,7 @@ function s.initial_effect(c)
 
 	-- Destroy opponent's monster and inflict damage
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_DESTROY+CATEGORY_DAMAGE)
 	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_MZONE)
@@ -170,7 +171,7 @@ end
 
 -- Add up to 2 "Blue-Eyes White Dragon" to hand when sent to GY
 function s.thfilter(c)
-	return c:IsCode(CARD_BLUEEYES_W_DRAGON) and c:IsAbleToHand()
+	return c:IsCode(0xdd) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
