@@ -168,21 +168,34 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Special Summon 2 "Blue-Eyes" monsters during Main Phase
-function s.spbfilter(c,e,tp)
-	return c:IsCode(0xdd) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+-- Check if there are 2 "Blue-Eyes" monsters with different names in Deck or GY
+function s.spsfilter1(c,e,tp)
+	return c:IsSetCard(0xdd) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
+function s.spsfilter2(c,e,tp,code)
+	return c:IsSetCard(0xdd) and not c:IsCode(29713285) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+-- Target: Special Summon 2 "Blue-Eyes" monsters with different names
 function s.spbtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
-		and Duel.IsExistingMatchingCard(s.spbfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,nil,e,tp) end
+	if chk==0 then
+		local g=Duel.GetMatchingGroup(s.spsfilter1,tp,LOCATION_DECK+LOCATION_GRAVE,0,nil,e,tp)
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>1 and g:GetClassCount(Card.GetCode)>1
+	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK+LOCATION_GRAVE)
 end
 
+-- Special Summon the selected monsters
 function s.spbop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,s.spbfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,2,2,nil,e,tp)
-	if #g>0 then
-		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+	local g1=Duel.SelectMatchingCard(tp,s.spsfilter1,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp)
+	if #g1>0 then
+		local g2=Duel.SelectMatchingCard(tp,s.spsfilter2,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp,g1:GetFirst():GetCode())
+		if #g2>0 then
+			Duel.SpecialSummon(g1,0,tp,tp,false,false,POS_FACEUP)
+			Duel.SpecialSummon(g2,0,tp,tp,false,false,POS_FACEUP)
+		end
 	end
 end
 
