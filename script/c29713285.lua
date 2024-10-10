@@ -17,6 +17,7 @@ function s.initial_effect(c)
 
 	-- Detach 1 material: Special Summon 1 Level 1 Tuner and 1 "Blue-Eyes" monster
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
@@ -41,6 +42,7 @@ function s.initial_effect(c)
 
 	-- Special Summon 2 "Blue-Eyes" monsters during Main Phase
 	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e4:SetType(EFFECT_TYPE_IGNITION)
 	e4:SetRange(LOCATION_MZONE)
@@ -51,6 +53,7 @@ function s.initial_effect(c)
 
 	-- Target 1 opponent's monster; its ATK becomes 0
 	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,2))
 	e5:SetCategory(CATEGORY_ATKCHANGE)
 	e5:SetType(EFFECT_TYPE_IGNITION)
 	e5:SetRange(LOCATION_MZONE)
