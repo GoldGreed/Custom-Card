@@ -36,6 +36,16 @@ function s.initial_effect(c)
 	local e4=e3:Clone()
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
+	-- Special Summon 2 Level 8 Dragon monsters from Deck in Defense Position with 0 ATK/DEF and add 1 Rank-Up-Magic
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,3))
+	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SEARCH)
+	e5:SetType(EFFECT_TYPE_IGNITION)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCountLimit(1,{id,1})
+	e5:SetTarget(s.spdragtg)
+	e5:SetOperation(s.spdragop)
+	c:RegisterEffect(e5)
 end
 -- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
 function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -106,4 +116,40 @@ end
 -- Filter function for Dragon monsters with different names
 function s.dragonfilter(c)
 	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
+end
+-- Effect 4: Special Summon 2 Level 8 Dragons from Deck, then add 1 Rank-Up-Magic card
+function s.spdragtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
+		and Duel.IsExistingMatchingCard(s.level8dragonfilter,tp,LOCATION_DECK,0,2,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK)
+end
+function s.spdragop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+	local g=Duel.SelectMatchingCard(tp,s.level8dragonfilter,tp,LOCATION_DECK,0,2,2,nil)
+	if #g>0 then
+		for tc in aux.Next(g) do
+			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_SET_ATTACK_FINAL)
+			e1:SetValue(0)
+			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+			local e2=e1:Clone()
+			e2:SetCode(EFFECT_SET_DEFENSE_FINAL)
+			tc:RegisterEffect(e2)
+		end
+		Duel.SpecialSummonComplete()
+		local sg=Duel.SelectMatchingCard(tp,s.rankupfilter,tp,LOCATION_DECK,0,1,1,nil)
+		if #sg>0 then
+			Duel.SendtoHand(sg,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,sg)
+		end
+	end
+end
+function s.level8dragonfilter(c)
+	return c:IsRace(RACE_DRAGON) and c:IsLevel(8) and c:IsCanBeSpecialSummoned(0)
+end
+function s.rankupfilter(c)
+	return c:IsSetCard(0x95) and c:IsAbleToHand()
 end
