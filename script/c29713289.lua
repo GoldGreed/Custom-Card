@@ -200,6 +200,8 @@ end
 -- Effect 6: If Xyz Summon, Special Summon 1 Dragon from GY, add 1 "Galaxy-Eyes" and 1 "Tachyon" card
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(Card.IsRace,1,nil,RACE_DRAGON)
+	local tc=eg:GetFirst()
+	return tc:IsSummonType(SUMMON_TYPE_XYZ) and tc:IsControler(tp)
 end
 function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,1,nil)
@@ -222,5 +224,5 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.spfilter(c)
-	return c:IsRace(RACE_DRAGON) and c:IsCanBeSpecialSummoned(0)
+	return c:IsRace(RACE_DRAGON)
 end
