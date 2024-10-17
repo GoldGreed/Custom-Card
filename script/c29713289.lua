@@ -101,5 +101,5 @@ end
 
 -- Filter function for Dragon monsters
 function s.dragonfilter(c)
-	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave() and not c:IsCode(another_dragon_name)
+	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
 end
