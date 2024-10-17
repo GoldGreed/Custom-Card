@@ -8,7 +8,6 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.sphandcon)
 	e1:SetTarget(s.sphandtg)
 	e1:SetOperation(s.sphandop)
 	c:RegisterEffect(e1)
@@ -21,7 +20,7 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCondition(s.spgycon)
 	e2:SetTarget(s.spgytg)
-	e2:SetOperation(s.spgop)
+	e2:SetOperation(s.spgyop)
 	c:RegisterEffect(e2)
 
 	-- On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
@@ -52,7 +51,7 @@ function s.initial_effect(c)
 	-- Send up to 2 Dragon monsters to GY, increase levels
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,4))
-	e6:SetCategory(CATEGORY_TOGRAVE)
+	e6:SetCategory(CATEGORY_TOGRAVE+CATEGORY_LVCHANGE)
 	e6:SetType(EFFECT_TYPE_IGNITION)
 	e6:SetRange(LOCATION_MZONE)
 	e6:SetCountLimit(1,{id,2})
@@ -121,12 +120,10 @@ function s.initial_effect(c)
 	c:RegisterEffect(e11)
 end
 
--- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster
-function s.sphandcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(s.galaxyeyestachyonfilter,tp,LOCATION_DECK,0,1,nil)
-end
+-- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
 function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingMatchingCard(s.galaxyeyestachyonfilter,tp,LOCATION_DECK,0,1,nil)
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
@@ -148,11 +145,172 @@ function s.spgytg(e,tp,eg,ep,ev,re,r,rp,chk)
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
-function s.spgop(e,tp,eg,ep,ev,re,r,rp)
+function s.spgyop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
 end
 
 -- Effect 3: On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
-function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsSetCard,0x107b),tp,LOCATION_DECK,0,1,nil)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.galaxyfilter,tp,LOCATION_DECK,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.tachyonfilter,tp,LOCATION_DECK,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,2,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	local g1=Duel.SelectMatchingCard(tp,s.galaxyfilter,tp,LOCATION_DECK,0,1,1,nil)
+	local g2=Duel.SelectMatchingCard(tp,s.tachyonfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g1>0 and #g2>0 then
+		Duel.SendtoHand(g1,nil,REASON_EFFECT)
+		Duel.SendtoHand(g2,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g1+g2)
+		local g3=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,2,2,nil)
+		Duel.SendtoGrave(g3,REASON_EFFECT)
+	end
+end
+function s.galaxyfilter(c)
+	return c:IsSetCard(0x107b) and c:IsAbleToHand()
+end
+function s.tachyonfilter(c)
+	return c:IsSetCard(0x10bc) and c:IsAbleToHand()
+end
+function s.dragonfilter(c)
+	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
+end
+
+-- Effect 4: Special Summon 2 Level 8 Dragons from Deck, then add 1 Rank-Up-Magic card
+function s.spdragtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
+		and Duel.IsExistingMatchingCard(s.level8dragonfilter,tp,LOCATION_DECK,0,2,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK)
+end
+function s.spdragop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+	local g=Duel.SelectMatchingCard(tp,s.level8dragonfilter,tp,LOCATION_DECK,0,2,2,nil)
+	if #g>0 then
+		for tc in aux.Next(g) do
+			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_SET_ATTACK_FINAL)
+			e1:SetValue(0)
+			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+			local e2=e1:Clone()
+			e2:SetCode(EFFECT_SET_DEFENSE_FINAL)
+			tc:RegisterEffect(e2)
+		end
+		Duel.SpecialSummonComplete()
+		local sg=Duel.SelectMatchingCard(tp,s.rankupfilter,tp,LOCATION_DECK,0,1,1,nil)
+		if #sg>0 then
+			Duel.SendtoHand(sg,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,sg)
+		end
+	end
+end
+function s.level8dragonfilter(c)
+	return c:IsRace(RACE_DRAGON) and c:IsLevel(8) and c:IsCanBeSpecialSummoned(0)
+end
+function s.rankupfilter(c)
+	return c:IsSetCard(0x95) and c:IsAbleToHand()
+end
+
+-- Effect 5: Send up to 2 Dragon monsters to GY, increase levels of all monsters you control
+function s.sendtogytg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.sendtogyop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,1,2,nil)
+	if #g>0 then
+		Duel.SendtoGrave(g,REASON_EFFECT)
+		local ct=#g
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetCode(EFFECT_UPDATE_LEVEL)
+		e1:SetTargetRange(LOCATION_MZONE,0)
+		e1:SetValue(ct)
+		e1:SetReset(RESET_PHASE+PHASE_END)
+		Duel.RegisterEffect(e1,tp)
+	end
+end
+
+-- Effect 6: If Xyz Summon, Special Summon 1 Dragon from GY, add 1 "Galaxy-Eyes" and 1 "Tachyon" card
+function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(Card.IsRace,1,nil,RACE_DRAGON)
+end
+function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.galaxyfilter,tp,LOCATION_DECK,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.tachyonfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+end
+function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,1,1,nil):GetFirst()
+	if tc then
+		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+		local g1=Duel.SelectMatchingCard(tp,s.galaxyfilter,tp,LOCATION_DECK,0,1,1,nil)
+		local g2=Duel.SelectMatchingCard(tp,s.tachyonfilter,tp,LOCATION_DECK,0,1,1,nil)
+		if #g1>0 and #g2>0 then
+			Duel.SendtoHand(g1,nil,REASON_EFFECT)
+			Duel.SendtoHand(g2,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,g1+g2)
+		end
+	end
+end
+function s.spfilter(c)
+	return c:IsRace(RACE_DRAGON) and c:IsCanBeSpecialSummoned(0)
+end
+
+-- Effect 7: Attach this card to a Dragon Xyz Monster as material during battle
+function s.xyzbattlecon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetBattleMonster(tp):IsRace(RACE_DRAGON) and Duel.GetBattleMonster(tp):IsType(TYPE_XYZ)
+end
+function s.xyzbattletg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsCanOverlay() end
+end
+function s.xyzbattleop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetBattleMonster(tp)
+	if tc then
+		Duel.Overlay(tc,Group.FromCards(e:GetHandler()))
+	end
+end
+
+-- Effect 8: If sent to the GY, Special Summon this card
+function s.spsentcon(e,tp,eg,ep,ev,re,r,rp)
+	return r&REASON_EFFECT~=0
+end
+function s.spsenttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+function s.spsentop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
+end
+
+-- Effect 9: If detached from Xyz monster, add 1 Dragon-Type monster from Deck to hand
+function s.detachtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.detachop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
+end
+
+-- Effect 10: While in GY, add 1 "Seventh" card from Deck to hand
+function s.seventhtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.seventhfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.seventhop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.seventhfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
+end
+function s.seventhfilter(c)
+	return c:IsSetCard(0x24a) and c:IsAbleToHand()
 end
