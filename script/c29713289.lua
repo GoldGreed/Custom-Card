@@ -1,0 +1,158 @@
+--Galaxy-Eyes Tachyon Evolution Dragon
+local s,id=GetID()
+function s.initial_effect(c)
+	-- Special Summon from hand by sending 1 "Galaxy-Eyes" or "Tachyon" monster from Deck to GY
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOGRAVE)
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_HAND)
+	e1:SetCountLimit(1,id)
+	e1:SetCondition(s.sphandcon)
+	e1:SetTarget(s.sphandtg)
+	e1:SetOperation(s.sphandop)
+	c:RegisterEffect(e1)
+
+	-- Special Summon from GY if a Dragon is on the field
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_GRAVE)
+	e2:SetCondition(s.spgycon)
+	e2:SetTarget(s.spgytg)
+	e2:SetOperation(s.spgop)
+	c:RegisterEffect(e2)
+
+	-- On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TOGRAVE)
+	e3:SetType(EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_SINGLE)
+	e3:SetCode(EVENT_SUMMON_SUCCESS)
+	e3:SetCondition(s.thcon)
+	e3:SetTarget(s.thtg)
+	e3:SetOperation(s.thop)
+	c:RegisterEffect(e3)
+	local e4=e3:Clone()
+	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
+	c:RegisterEffect(e4)
+
+	-- Special Summon 2 Level 8 Dragon monsters from Deck in Defense Position with 0 ATK/DEF and add 1 Rank-Up-Magic
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,3))
+	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SEARCH)
+	e5:SetType(EFFECT_TYPE_IGNITION)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCountLimit(1,{id,1})
+	e5:SetTarget(s.spdragtg)
+	e5:SetOperation(s.spdragop)
+	c:RegisterEffect(e5)
+
+	-- Send up to 2 Dragon monsters to GY, increase levels
+	local e6=Effect.CreateEffect(c)
+	e6:SetDescription(aux.Stringid(id,4))
+	e6:SetCategory(CATEGORY_TOGRAVE)
+	e6:SetType(EFFECT_TYPE_IGNITION)
+	e6:SetRange(LOCATION_MZONE)
+	e6:SetCountLimit(1,{id,2})
+	e6:SetTarget(s.sendtogytg)
+	e6:SetOperation(s.sendtogyop)
+	c:RegisterEffect(e6)
+
+	-- Xyz Summon: Target 1 Dragon in GY, Special Summon and add 1 "Galaxy-Eyes" and 1 "Tachyon" card
+	local e7=Effect.CreateEffect(c)
+	e7:SetDescription(aux.Stringid(id,5))
+	e7:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SEARCH)
+	e7:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e7:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e7:SetRange(LOCATION_MZONE)
+	e7:SetCountLimit(1,{id,3})
+	e7:SetCondition(s.xyzcon)
+	e7:SetTarget(s.xyztg)
+	e7:SetOperation(s.xyzop)
+	c:RegisterEffect(e7)
+
+	-- If a Dragon Xyz Monster battles: Attach this card as material
+	local e8=Effect.CreateEffect(c)
+	e8:SetDescription(aux.Stringid(id,6))
+	e8:SetType(EFFECT_TYPE_QUICK_O)
+	e8:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+	e8:SetRange(LOCATION_GRAVE)
+	e8:SetCondition(s.xyzbattlecon)
+	e8:SetTarget(s.xyzbattletg)
+	e8:SetOperation(s.xyzbattleop)
+	c:RegisterEffect(e8)
+
+	-- If sent to GY, Special Summon this card
+	local e9=Effect.CreateEffect(c)
+	e9:SetDescription(aux.Stringid(id,7))
+	e9:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e9:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e9:SetCode(EVENT_TO_GRAVE)
+	e9:SetProperty(EFFECT_FLAG_DELAY)
+	e9:SetCountLimit(1,{id,4})
+	e9:SetCondition(s.spsentcon)
+	e9:SetTarget(s.spsenttg)
+	e9:SetOperation(s.spsentop)
+	c:RegisterEffect(e9)
+
+	-- If detached from Xyz monster: Add 1 Dragon monster from Deck to hand
+	local e10=Effect.CreateEffect(c)
+	e10:SetDescription(aux.Stringid(id,8))
+	e10:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e10:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e10:SetCode(EVENT_DETACH_MATERIAL)
+	e10:SetProperty(EFFECT_FLAG_DELAY)
+	e10:SetCountLimit(1,{id,5})
+	e10:SetTarget(s.detachtg)
+	e10:SetOperation(s.detachop)
+	c:RegisterEffect(e10)
+
+	-- While in GY, add 1 "Seventh" card to hand
+	local e11=Effect.CreateEffect(c)
+	e11:SetDescription(aux.Stringid(id,9))
+	e11:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e11:SetType(EFFECT_TYPE_IGNITION)
+	e11:SetRange(LOCATION_GRAVE)
+	e11:SetCountLimit(1,{id,6})
+	e11:SetTarget(s.seventhtg)
+	e11:SetOperation(s.seventhop)
+	c:RegisterEffect(e11)
+end
+
+-- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster
+function s.sphandcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(s.galaxyeyestachyonfilter,tp,LOCATION_DECK,0,1,nil)
+end
+function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+function s.sphandop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.SendtoGrave(Duel.SelectMatchingCard(tp,s.galaxyeyestachyonfilter,tp,LOCATION_DECK,0,1,1,nil),REASON_EFFECT)>0 then
+		Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
+	end
+end
+function s.galaxyeyestachyonfilter(c)
+	return (c:IsSetCard(0x107b) or c:IsSetCard(0x10bc)) and c:IsType(TYPE_MONSTER)
+end
+
+-- Effect 2: Special Summon from GY if a Dragon is on the field
+function s.spgycon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsRace,RACE_DRAGON),tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+end
+function s.spgytg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+function s.spgop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
+end
+
+-- Effect 3: On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
+function s.thcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsSetCard,0x107b),tp,LOCATION_DECK,0,1,nil)
+end
