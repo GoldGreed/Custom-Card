@@ -24,17 +24,17 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	-- On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TOGRAVE)
-	e3:SetType(EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_SINGLE)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_SUMMON_SUCCESS)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetTarget(s.thtg)
 	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
-	local e4=e3:Clone()
+	local e4=e1:Clone()
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
-end
 
 -- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
 function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -66,12 +66,6 @@ function s.spgyop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- Effect 3: On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.galaxyfilter,tp,LOCATION_DECK,0,1,nil)
-		and Duel.IsExistingMatchingCard(s.tachyonfilter,tp,LOCATION_DECK,0,1,nil)
-		and Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,2,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
-end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.SelectMatchingCard(tp,s.galaxyfilter,tp,LOCATION_DECK,0,1,1,nil)
 	local g2=Duel.SelectMatchingCard(tp,s.tachyonfilter,tp,LOCATION_DECK,0,1,1,nil)
@@ -80,15 +74,23 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(g2,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g1+g2)
 		local g3=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,2,2,nil)
-		Duel.SendtoGrave(g3,REASON_EFFECT)
+		if #g3>0 then
+			Duel.SendtoGrave(g3,REASON_EFFECT)
+		end
 	end
 end
+
+-- Filter function for "Galaxy" cards
 function s.galaxyfilter(c)
 	return c:IsSetCard(0x107b) and c:IsAbleToHand()
 end
+
+-- Filter function for "Tachyon" cards
 function s.tachyonfilter(c)
 	return c:IsSetCard(0x10bc) and c:IsAbleToHand()
 end
+
+-- Filter function for Dragon monsters with different names
 function s.dragonfilter(c)
 	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
 end
