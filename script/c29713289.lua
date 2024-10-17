@@ -72,6 +72,17 @@ function s.initial_effect(c)
 	e7:SetTarget(s.xyztg)
 	e7:SetOperation(s.xyzop)
 	c:RegisterEffect(e7)
+
+	-- If a Dragon Xyz Monster battles: Attach this card as material
+	local e8=Effect.CreateEffect(c)
+	e8:SetDescription(aux.Stringid(id,6))
+	e8:SetType(EFFECT_TYPE_QUICK_O)
+	e8:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+	e8:SetRange(LOCATION_GRAVE)
+	e8:SetCondition(s.xyzbattlecon)
+	e8:SetTarget(s.xyzbattletg)
+	e8:SetOperation(s.xyzbattleop)
+	c:RegisterEffect(e8)
 end
 -- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
 function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -225,4 +236,18 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.spfilter(c)
 	return c:IsRace(RACE_DRAGON)
+end
+
+-- Effect 7: Attach this card to a Dragon Xyz Monster as material during battle
+function s.xyzbattlecon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetBattleMonster(tp):IsRace(RACE_DRAGON) and Duel.GetBattleMonster(tp):IsType(TYPE_XYZ)
+end
+function s.xyzbattletg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsCanOverlay() end
+end
+function s.xyzbattleop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetBattleMonster(tp)
+	if tc then
+		Duel.Overlay(tc,Group.FromCards(e:GetHandler()))
+	end
 end
