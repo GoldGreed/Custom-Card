@@ -222,5 +222,5 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.spfilter(c)
-	return c:IsRace(RACE_DRAGON)
+	return c:IsRace(RACE_DRAGON) and c:IsCanBeSpecialSummoned(0)
 end
