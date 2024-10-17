@@ -148,7 +148,7 @@ function s.spdragop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.level8dragonfilter(c)
-	return c:IsRace(RACE_DRAGON) and c:IsLevel(8) and c:IsCanBeSpecialSummoned(0)
+	return c:IsRace(RACE_DRAGON) and c:IsLevel(8)
 end
 function s.rankupfilter(c)
 	return c:IsSetCard(0x95) and c:IsAbleToHand()
