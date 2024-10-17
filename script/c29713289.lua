@@ -22,13 +22,12 @@ function s.initial_effect(c)
 	e2:SetTarget(s.spgytg)
 	e2:SetOperation(s.spgyop)
 	c:RegisterEffect(e2)
-	-- On Normal or Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragon monsters to GY
+	-- On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TOGRAVE)
 	e3:SetType(EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_SINGLE)
 	e3:SetCode(EVENT_SUMMON_SUCCESS)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetTarget(s.thtg)
 	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
@@ -66,7 +65,7 @@ function s.spgyop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
 end
 
--- Target function for adding "Galaxy" and "Tachyon" cards and sending 2 Dragons to the GY
+-- Effect 3: On Normal/Special Summon: Add 1 "Galaxy" and 1 "Tachyon" card, then send 2 Dragons to GY
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.galaxyfilter,tp,LOCATION_DECK,0,1,nil)
 		and Duel.IsExistingMatchingCard(s.tachyonfilter,tp,LOCATION_DECK,0,1,nil)
@@ -84,18 +83,12 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoGrave(g3,REASON_EFFECT)
 	end
 end
-
--- Filter function for "Galaxy" cards
 function s.galaxyfilter(c)
 	return c:IsSetCard(0x107b) and c:IsAbleToHand()
 end
-
--- Filter function for "Tachyon" cards
 function s.tachyonfilter(c)
 	return c:IsSetCard(0x10bc) and c:IsAbleToHand()
 end
-
--- Filter function for Dragon monsters
 function s.dragonfilter(c)
 	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
 end
