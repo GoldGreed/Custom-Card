@@ -178,10 +178,10 @@ end
 
 -- Effect 5: Send up to 2 Dragon monsters to GY, increase levels of all monsters you control
 function s.sendtogytg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.sendft,tp,LOCATION_DECK,0,1,nil) end
 end
 function s.sendtogyop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,1,2,nil)
+	local g=Duel.SelectMatchingCard(tp,s.sendft,tp,LOCATION_DECK,0,1,2,nil)
 	if #g>0 then
 		Duel.SendtoGrave(g,REASON_EFFECT)
 		local ct=#g
@@ -193,6 +193,10 @@ function s.sendtogyop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_PHASE+PHASE_END)
 		Duel.RegisterEffect(e1,tp)
 	end
+end
+
+function s.sendft(c)
+	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
 end
 
 -- Effect 6: If Xyz Summon, Special Summon 1 Dragon from GY, add 1 "Galaxy-Eyes" and 1 "Tachyon" card
