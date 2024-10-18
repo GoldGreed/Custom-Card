@@ -75,7 +75,7 @@ function s.initial_effect(c)
 
 	-- If a Dragon Xyz Monster battles: Attach this card as material
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,0))
+	e8:SetDescription(aux.Stringid(id,6))
 	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e8:SetCode(EVENT_DAMAGE_STEP_END)
 	e8:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -84,6 +84,43 @@ function s.initial_effect(c)
 	e8:SetTarget(s.mattg)
 	e8:SetOperation(s.matop)
 	c:RegisterEffect(e8)
+
+	-- If sent to GY, Special Summon this card
+	local e9=Effect.CreateEffect(c)
+	e9:SetDescription(aux.Stringid(id,7))
+	e9:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e9:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e9:SetCode(EVENT_TO_GRAVE)
+	e9:SetProperty(EFFECT_FLAG_DELAY)
+	e9:SetCountLimit(1,{id,7})
+	e9:SetCondition(s.spsentcon)
+	e9:SetTarget(s.spsenttg)
+	e9:SetOperation(s.spsentop)
+	c:RegisterEffect(e9)
+
+	-- If detached from Xyz monster: Add 1 Dragon monster from Deck to hand
+	local e10=Effect.CreateEffect(c)
+	e10:SetDescription(aux.Stringid(id,8))
+	e10:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e10:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e10:SetCode(EVENT_DETACH_MATERIAL)
+	e10:SetProperty(EFFECT_FLAG_DELAY)
+	e10:SetCountLimit(1,{id,8})
+	e10:SetTarget(s.detachtg)
+	e10:SetOperation(s.detachop)
+	c:RegisterEffect(e10)
+
+	-- While in GY, add 1 "Seventh" card to hand
+	local e11=Effect.CreateEffect(c)
+	e11:SetDescription(aux.Stringid(id,9))
+	e11:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e11:SetType(EFFECT_TYPE_IGNITION)
+	e11:SetRange(LOCATION_GRAVE)
+	e11:SetCountLimit(1,{id,9})
+	e11:SetTarget(s.seventhtg)
+	e11:SetOperation(s.seventhop)
+	c:RegisterEffect(e11)
+
 end
 -- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
 function s.sphandtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -267,4 +304,44 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	if bc:IsRelateToBattle() and c:IsRelateToEffect(e) then
 		Duel.Overlay(bc,Group.FromCards(c))
 	end
+end
+
+-- Effect 8: If sent to the GY, Special Summon this card
+function s.spsentcon(e,tp,eg,ep,ev,re,r,rp)
+	return r&REASON_EFFECT~=0
+end
+function s.spsenttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+function s.spsentop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
+end
+
+-- Effect 9: If detached from Xyz monster, add 1 Dragon-Type monster from Deck to hand
+function s.detachtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.detachop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
+end
+
+-- Effect 10: While in GY, add 1 "Seventh" card from Deck to hand
+function s.seventhtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.seventhfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.seventhop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.seventhfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
+end
+function s.seventhfilter(c)
+	return c:IsSetCard(0x24a) and c:IsAbleToHand()
 end
