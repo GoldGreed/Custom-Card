@@ -184,7 +184,7 @@ end
 
 -- Filter function for "Tachyon" cards
 function s.tachyonfilter(c)
-	return c:IsSetCard(0x307b) and c:IsAbleToHand()
+	return c:IsSetCard(SET_TACHYON) and c:IsAbleToHand()
 end
 
 -- Filter function for Dragon monsters with different names
