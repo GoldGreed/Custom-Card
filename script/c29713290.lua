@@ -37,15 +37,15 @@ function s.initial_effect(c)
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
 
-	-- Increase the Level of all monsters you control
+	 -- Send up to 2 Dragon monsters to GY, increase levels
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,3))
+	e5:SetDescription(aux.Stringid(id,4))
 	e5:SetCategory(CATEGORY_TOGRAVE+CATEGORY_LVCHANGE)
 	e5:SetType(EFFECT_TYPE_IGNITION)
 	e5:SetRange(LOCATION_MZONE)
-	e5:SetCountLimit(1,id)
-	e5:SetTarget(s.lvtg)
-	e5:SetOperation(s.lvop)
+	e5:SetCountLimit(1,{id,4})
+	e5:SetTarget(s.sendtogytg)
+	e5:SetOperation(s.sendtogyop)
 	c:RegisterEffect(e5)
 
 	-- Special Summon 1 Dragon from GY and 1 from Deck
@@ -159,33 +159,24 @@ function s.tachyonfilter(c)
 	return c:IsSetCard(SET_TACHYON) and c:IsAbleToHand()
 end
 
--- Increase Level of all monsters you control by the number of Dragons sent to GY
-function s.lvtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,2,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,2,tp,LOCATION_DECK)
+-- Effect 5: Send up to 2 Dragon monsters to GY, increase levels of all monsters you control
+function s.sendtogytg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dragonfilter,tp,LOCATION_DECK,0,1,nil) end
 end
-function s.lvop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,2,2,nil)
+function s.sendtogyop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.SelectMatchingCard(tp,s.dragonfilter,tp,LOCATION_DECK,0,1,2,nil)
 	if #g>0 then
 		Duel.SendtoGrave(g,REASON_EFFECT)
-		local lvl=2 -- Adjust based on the number of cards sent to GY
-		local c=e:GetHandler()
-		local tg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-		for tc in aux.Next(tg) do
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_UPDATE_LEVEL)
-			e1:SetValue(lvl)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-			tc:RegisterEffect(e1)
-		end
+		local ct=#g
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetCode(EFFECT_UPDATE_LEVEL)
+		e1:SetTargetRange(LOCATION_MZONE,0)
+		e1:SetValue(ct)
+		e1:SetReset(RESET_PHASE+PHASE_END)
+		Duel.RegisterEffect(e1,tp)
 	end
 end
-function s.dragonfilter(c)
-	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
-end
-
 -- Special Summon 1 Dragon from GY and 1 from Deck
 function s.sptg3(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_GRAVE,0,1,nil)
