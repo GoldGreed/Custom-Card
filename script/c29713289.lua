@@ -241,27 +241,30 @@ end
 
 -- Effect 7: Attach this card to a Dragon Xyz Monster as material during battle
 function s.matcon(e,tp,eg,ep,ev,re,r,rp)
-	local bc=Duel.GetAttackTarget()
-	local at=Duel.GetAttacker()
-	if not bc or not at then return false end
-	if bc:IsControler(tp) then at=bc end
-	return at:IsType(TYPE_XYZ) and at:IsRace(RACE_DRAGON) and at:IsControler(tp)
+	local bc=Duel.GetAttacker()
+	local at=Duel.GetAttackTarget()
+	if not at or not bc then return false end
+	if bc:IsControler(tp) and bc:IsType(TYPE_XYZ) and bc:IsRace(RACE_DRAGON) then
+		e:SetLabelObject(bc)
+		return true
+	elseif at:IsControler(tp) and at:IsType(TYPE_XYZ) and at:IsRace(RACE_DRAGON) then
+		e:SetLabelObject(at)
+		return true
+	else
+		return false
+	end
 end
 
 -- Target: Select this card to attach as Xyz material
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToChangeControler() end
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,e:GetHandler(),1,0,0)
+	if chk==0 then return e:GetHandler():IsAbleToOverlay() end
 end
 
 -- Operation: Attach this card to the Dragon Xyz Monster as material
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local bc=Duel.GetAttacker()
-	local at=Duel.GetAttackTarget()
-	if not bc or not at then return end
-	if bc:IsControler(tp) then bc=at end
-	if c:IsRelateToEffect(e) and bc:IsRelateToBattle() and bc:IsType(TYPE_XYZ) and bc:IsRace(RACE_DRAGON) then
+	local bc=e:GetLabelObject()
+	if bc:IsRelateToBattle() and c:IsRelateToEffect(e) then
 		Duel.Overlay(bc,Group.FromCards(c))
 	end
 end
