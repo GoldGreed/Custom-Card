@@ -246,7 +246,9 @@ function s.sendtogyop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.RegisterEffect(e1,tp)
 	end
 end
-
+function s.dragonfilter(c)
+	return c:IsRace(RACE_DRAGON) and c:IsAbleToGrave()
+end
 -- Effect 6: If Xyz Summon, Special Summon 1 Dragon from GY, add 1 "Galaxy-Eyes" and 1 "Tachyon" card
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	local tc=eg:GetFirst()
