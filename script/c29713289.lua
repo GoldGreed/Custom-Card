@@ -75,13 +75,14 @@ function s.initial_effect(c)
 
 	-- If a Dragon Xyz Monster battles: Attach this card as material
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,6))
-	e8:SetType(EFFECT_TYPE_QUICK_O)
-	e8:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
-	e8:SetRange(LOCATION_GRAVE)
-	e8:SetCondition(s.xyzbattlecon)
-	e8:SetTarget(s.xyzbattletg)
-	e8:SetOperation(s.xyzbattleop)
+	e8:SetDescription(aux.Stringid(id,0))
+	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e8:SetCode(EVENT_DAMAGE_STEP_END)
+	e8:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e8:SetRange(LOCATION_MZONE)
+	e8:SetCondition(s.matcon)
+	e8:SetTarget(s.mattg)
+	e8:SetOperation(s.matop)
 	c:RegisterEffect(e8)
 end
 -- Effect 1: Special Summon from hand by sending "Galaxy-Eyes" or "Tachyon" monster to the GY
@@ -239,15 +240,28 @@ function s.spfilter(c)
 end
 
 -- Effect 7: Attach this card to a Dragon Xyz Monster as material during battle
-function s.xyzbattlecon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetBattleMonster(tp):IsRace(RACE_DRAGON) and Duel.GetBattleMonster(tp):IsType(TYPE_XYZ)
+function s.matcon(e,tp,eg,ep,ev,re,r,rp)
+	local bc=Duel.GetAttackTarget()
+	local at=Duel.GetAttacker()
+	if not bc or not at then return false end
+	if bc:IsControler(tp) then at=bc end
+	return at:IsType(TYPE_XYZ) and at:IsRace(RACE_DRAGON) and at:IsControler(tp)
 end
-function s.xyzbattletg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsCanOverlay() end
+
+-- Target: Select this card to attach as Xyz material
+function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsAbleToChangeControler() end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,e:GetHandler(),1,0,0)
 end
-function s.xyzbattleop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetBattleMonster(tp)
-	if tc then
-		Duel.Overlay(tc,Group.FromCards(e:GetHandler()))
+
+-- Operation: Attach this card to the Dragon Xyz Monster as material
+function s.matop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local bc=Duel.GetAttacker()
+	local at=Duel.GetAttackTarget()
+	if not bc or not at then return end
+	if bc:IsControler(tp) then bc=at end
+	if c:IsRelateToEffect(e) and bc:IsRelateToBattle() and bc:IsType(TYPE_XYZ) and bc:IsRace(RACE_DRAGON) then
+		Duel.Overlay(bc,Group.FromCards(c))
 	end
 end
