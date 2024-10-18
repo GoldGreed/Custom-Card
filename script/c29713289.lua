@@ -257,7 +257,7 @@ end
 
 -- Target: Select this card to attach as Xyz material
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToOverlay() end
+	if chk==0 then return e:GetHandler():IsRelateToEffect(e) end
 end
 
 -- Operation: Attach this card to the Dragon Xyz Monster as material
