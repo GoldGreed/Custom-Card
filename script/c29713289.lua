@@ -333,7 +333,7 @@ end
 
 -- Effect 10: While in GY, add 1 "Seventh" card from Deck to hand
 function s.seventhtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.seventhfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.galaxyfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
 function s.seventhop(e,tp,eg,ep,ev,re,r,rp)
