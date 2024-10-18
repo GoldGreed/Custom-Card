@@ -338,12 +338,12 @@ function s.seventhtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.seventhop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.seventhfilter,tp,LOCATION_DECK,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.galaxyfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 then
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
 end
 function s.seventhfilter(c)
-	return c:IsSetCard(0x175) and c:IsAbleToHand()
+	return c:IsSetCard(0x175)
 end
